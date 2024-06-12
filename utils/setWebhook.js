@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 import 'dotenv/config';
 
 const TOKEN = process.env.TOKEN;
-const webhookUrl = `${process.env.WEBHOOK_URL}/${TOKEN}`;
+const webhookUrl = `${process.env.WEBHOOK_URL}/webhook/${TOKEN}`;
 const TELEGRAM_API = `https://api.telegram.org/bot${TOKEN}`;
 
 const setWebhook = async () => {

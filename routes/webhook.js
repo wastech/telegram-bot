@@ -4,9 +4,41 @@ import faq from '../data/faq.js';
 
 const router = express.Router();
 const TOKEN = process.env.TOKEN;
+const THREAD_ID = process.env.THREAD_ID;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // Telegram API URL
 const TELEGRAM_API = `https://api.telegram.org/bot${TOKEN}`;
+
+// Function to call OpenAI API
+export async function callOpenAI(userText) {
+  const url = 'https://api.openai.com/v1/chat/completions';
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant.' },
+          { role: 'user', content: userText },
+        ],
+      }),
+    });
+    const data = await response.json();
+    console.log('OpenAI API response:', data);
+    if (data.choices && data.choices.length > 0) {
+      return data.choices[0].message.content;
+    }
+    return "I'm sorry, I couldn't find an answer to your question.";
+  } catch (error) {
+    console.error('OpenAI API error:', error);
+    return "I'm sorry, something went wrong while fetching the answer.";
+  }
+}
 
 // Webhook endpoint
 router.post(`/webhook/${TOKEN}`, async (req, res) => {
@@ -22,10 +54,8 @@ router.post(`/webhook/${TOKEN}`, async (req, res) => {
     if (faq[text]) {
       replyText = faq[text];
     } else {
-      replyText =
-        "Sorry, I don't understand that question. Please ask something related to logistics.";
+      replyText = "I'm sorry, I couldn't find an answer to your question."; // await callOpenAI(text);
     }
-
     await sendMessage(chatId, replyText);
   }
 
